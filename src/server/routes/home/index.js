@@ -1,9 +1,9 @@
-import { homeController } from './controller.js'
+import {
+  homeController,
+  summaryController,
+  summaryDataController
+} from './controller.js'
 
-/**
- * Sets up the routes used in the home page.
- * These routes are registered in src/server/router.js.
- */
 export const home = {
   plugin: {
     name: 'home',
@@ -13,6 +13,27 @@ export const home = {
           method: 'GET',
           path: '/',
           ...homeController
+        },
+        {
+          method: 'GET',
+          path: '/{county}/{parish}/{holding}',
+          ...homeController
+        },
+        {
+          method: 'GET',
+          path: '/summary',
+          options: {
+            app: { authMode: 'hub-service' }
+          },
+          ...summaryController
+        },
+        {
+          method: 'GET',
+          path: '/summary-data',
+          options: {
+            app: { authMode: 'hub-service' }
+          },
+          ...summaryDataController
         }
       ])
     }

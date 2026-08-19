@@ -1,43 +1,12 @@
-import { config } from '#/config/config.js'
-import { statusCodes } from '../common/constants/status-codes.js'
+import { createStaticFilesPlugin } from '@defra/lis-infra-ui-services/static-files'
+import { statusCodes } from '@defra/lis-infra-ui-services/status-codes'
+import { createBasePathHelpersForConfig } from '@defra/lis-infra-ui-services/base-path'
+import { config } from '#config/config.js'
 
-export const serveStaticFiles = {
-  plugin: {
-    name: 'staticFiles',
-    register(server) {
-      server.route([
-        {
-          options: {
-            auth: false,
-            cache: {
-              expiresIn: config.get('staticCacheTimeout'),
-              privacy: 'private'
-            }
-          },
-          method: 'GET',
-          path: '/favicon.ico',
-          handler(_request, h) {
-            return h.response().code(statusCodes.noContent).type('image/x-icon')
-          }
-        },
-        {
-          options: {
-            auth: false,
-            cache: {
-              expiresIn: config.get('staticCacheTimeout'),
-              privacy: 'private'
-            }
-          },
-          method: 'GET',
-          path: `${config.get('assetPath')}/{param*}`,
-          handler: {
-            directory: {
-              path: '.',
-              redirectToSlash: true
-            }
-          }
-        }
-      ])
-    }
-  }
-}
+const { getAssetPaths } = createBasePathHelpersForConfig(config)
+
+export const serveStaticFiles = createStaticFilesPlugin({
+  assetPaths: getAssetPaths(),
+  staticCacheTimeout: config.get('staticCacheTimeout'),
+  noContentStatusCode: statusCodes.noContent
+})

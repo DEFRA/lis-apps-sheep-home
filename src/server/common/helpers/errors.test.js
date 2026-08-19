@@ -1,8 +1,9 @@
 import { vi } from 'vitest'
+import { statusCodes } from '@defra/lis-infra-ui-services/status-codes'
+import { config } from '#config/config.js'
 
-import { catchAll } from './errors.js'
+import { catchAll } from '@defra/lis-infra-ui-services/errors'
 import { createServer } from '../../server.js'
-import { statusCodes } from '../constants/status-codes.js'
 
 describe('#errors', () => {
   let server
@@ -23,7 +24,7 @@ describe('#errors', () => {
     })
 
     expect(result).toEqual(
-      expect.stringContaining('Page not found | cdp-node-frontend-template')
+      expect.stringContaining(`Page not found | ${config.get('serviceName')}`)
     )
     expect(statusCode).toBe(statusCodes.notFound)
   })

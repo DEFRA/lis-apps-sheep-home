@@ -1,0 +1,25 @@
+{% for holding in holdings %}
+  <section class="govuk-summary-card">
+    <div class="govuk-summary-card__title-wrapper">
+      <h3 class="govuk-summary-card__title">{{ holding.name }}</h3>
+    </div>
+    <div class="govuk-summary-card__content">
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">CPH</dt>
+          <dd class="govuk-summary-list__value">{{ holding.cph }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Sheep</dt>
+          <dd class="govuk-summary-list__value">{{ holding.sheepCount }}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+{% else %}
+  <p class="govuk-body">No holdings were found for your account.</p>
+{% endfor %}
+
+<p class="govuk-body">
+  <a class="govuk-link" href="{{ hubPath }}">View your sheep holdings</a>
+</p>

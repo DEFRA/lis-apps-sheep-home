@@ -1,17 +1,98 @@
 {% extends 'layouts/page.njk' %}
 
 {% block content %}
-  {{ appHeading({
-    text: heading,
-    caption: "CDP Node.js Frontend Template"
-  }) }}
+{#  {{ appHeading({#}
+{#    text: heading,#}
+{#    caption: caption#}
+{#  }) }}#}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <div class="govuk-body" data-testid="app-page-body">
-        <p></p>
-      </div>
+      {% if holdingLinks.length > 1 %}
+        <h2 class="govuk-heading-m">Your holdings</h2>
+        <ul class="govuk-list">
+          {% for holding in holdingLinks %}
+            <li>
+              {% if holding.selected %}
+                <strong>{{ holding.name }} ({{ holding.cph }})</strong>
+              {% else %}
+                <a class="govuk-link" href="{{ holding.url }}">{{ holding.name }} ({{ holding.cph }})</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if selectedHolding %}
+        <section class="govuk-summary-card">
+          <div class="govuk-summary-card__title-wrapper">
+            <h2 class="govuk-summary-card__title">{{ selectedHolding.name }}</h2>
+          </div>
+          <div class="govuk-summary-card__content">
+            <dl class="govuk-summary-list">
+              <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">CPH number</dt>
+                <dd class="govuk-summary-list__value">{{ selectedHolding.cph }}</dd>
+              </div>
+              {% if selectedHolding.postcode %}
+                <div class="govuk-summary-list__row">
+                  <dt class="govuk-summary-list__key">Postcode</dt>
+                  <dd class="govuk-summary-list__value">{{ selectedHolding.postcode }}</dd>
+                </div>
+              {% endif %}
+              <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Sheep on holding</dt>
+                <dd class="govuk-summary-list__value">{{ selectedHolding.sheepCount }}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        <h2 class="govuk-heading-m">What do you need to do?</h2>
+        <div class="govuk-button-group">
+          {% for action in actionLinks %}
+            {{ govukButton({
+              text: action.text,
+              href: action.url
+            }) }}
+          {% endfor %}
+        </div>
+
+        <h2 class="govuk-heading-m govuk-!-margin-top-7">Animals on this holding</h2>
+
+        {% if selectedHolding.sheep.length %}
+          <table class="govuk-table">
+            <caption class="govuk-table__caption govuk-table__caption--s">{{ selectedHolding.sheepCount }} sheep</caption>
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                <th scope="col" class="govuk-table__header">Ear tag number</th>
+                <th scope="col" class="govuk-table__header">Sex</th>
+                <th scope="col" class="govuk-table__header">Breed</th>
+                <th scope="col" class="govuk-table__header">Status</th>
+              </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+              {% for animal in selectedHolding.sheep %}
+                <tr class="govuk-table__row">
+                  <th scope="row" class="govuk-table__header">{{ animal.eartag }}</th>
+                  <td class="govuk-table__cell">{{ animal.sex }}</td>
+                  <td class="govuk-table__cell">{{ animal.breed }}</td>
+                  <td class="govuk-table__cell">
+                    <strong class="govuk-tag {{ animal.statusClass }}">{{ animal.statusLabel }}</strong>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="govuk-body">There are no sheep registered at this holding.</p>
+        {% endif %}
+      {% elif selectedCph %}
+        <h2 class="govuk-heading-m">Animals on holding</h2>
+        <p class="govuk-body">This holding is not linked to your account.</p>
+      {% else %}
+        <p class="govuk-body">No holdings were found for your account.</p>
+      {% endif %}
     </div>
   </div>
-
 {% endblock %}

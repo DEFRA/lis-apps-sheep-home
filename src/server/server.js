@@ -1,21 +1,44 @@
+/** @import { Server } from '@hapi/hapi' */
 import path from 'path'
 import hapi from '@hapi/hapi'
 import Scooter from '@hapi/scooter'
+import {
+  getLoggerForConfig,
+  getRequestLoggerPluginForConfig
+} from '@defra/lis-infra-ui-services/logging'
+import { createNunjucksConfig } from '@defra/lis-infra-ui-services/nunjucks/plugin'
 
 import { router } from './plugins/router.js'
-import { config } from '#/config/config.js'
+import { config } from '#config/config.js'
 import { pulse } from './plugins/pulse.js'
-import { catchAll } from './common/helpers/errors.js'
-import { nunjucksConfig } from '#/config/nunjucks/nunjucks.js'
+import { catchAll } from '@defra/lis-infra-ui-services/errors'
+import { createBasePathHelpersForConfig } from '@defra/lis-infra-ui-services/base-path'
+import { setupProxy } from '@defra/lis-infra-ui-services/proxy/setup-proxy'
 import { requestTracing } from './plugins/request-tracing.js'
-import { requestLogger } from './plugins/request-logger.js'
-import { sessionCache } from './plugins/session-cache.js'
-import { getCacheEngine } from './common/helpers/session-cache/cache-engine.js'
+import { createSessionCachePluginForConfig } from '@defra/lis-infra-ui-services/session-cache'
+import { getCacheEngine } from '@defra/lis-infra-ui-services/session-cache/cache-engine'
 import { secureContext } from '@defra/hapi-secure-context'
 import { contentSecurityPolicy } from './plugins/content-security-policy.js'
 import { metrics } from '@defra/cdp-metrics'
 
+const logger = getLoggerForConfig(config)
+const requestLogger = getRequestLoggerPluginForConfig(config)
+const sessionCache = createSessionCachePluginForConfig(config)
+const { getRequestBasePath } = createBasePathHelpersForConfig(config)
+const nunjucksConfig = createNunjucksConfig({
+  config,
+  logger,
+  getRequestBasePath
+})
+
+/**
+ * @returns {Promise<Server>}
+ */
 export async function createServer() {
+  setupProxy({
+    proxyUrl: config.get('httpProxy'),
+    logger
+  })
   const server = hapi.server({
     host: config.get('host'),
     port: config.get('port'),
@@ -45,7 +68,11 @@ export async function createServer() {
     cache: [
       {
         name: config.get('session.cache.name'),
-        engine: getCacheEngine(config.get('session.cache.engine'))
+        engine: getCacheEngine({
+          engine: config.get('session.cache.engine'),
+          config,
+          logger
+        })
       }
     ],
     state: {
@@ -62,7 +89,7 @@ export async function createServer() {
     nunjucksConfig,
     Scooter,
     contentSecurityPolicy,
-    router // Register all the controllers/routes defined in src/server/router.js
+    router
   ])
 
   server.ext('onPreResponse', catchAll)

@@ -4,9 +4,13 @@
 .idea
 .public
 node_modules
+tools/
 npm-debug.log
 coverage
 .cache
 .envrc
 tsconfig.tsbuildinfo
 .env
+.npmrc
+.cake/
+artifacts

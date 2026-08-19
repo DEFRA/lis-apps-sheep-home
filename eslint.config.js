@@ -1,8 +1,3 @@
-import neostandard from 'neostandard'
+import lisEslintConfig from '@defra/lis-infra-eslint-config'
 
-export default neostandard({
-  env: ['node', 'vitest'],
-  ignores: [...neostandard.resolveIgnoresFromGitignore()],
-  noJsx: true,
-  noStyle: true
-})
+export default [...lisEslintConfig]

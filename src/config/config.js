@@ -4,10 +4,9 @@ import { fileURLToPath } from 'node:url'
 
 import convictFormatWithValidator from 'convict-format-with-validator'
 
-const dirname = path.dirname(fileURLToPath(import.meta.url))
+import { milliseconds } from '@defra/lis-infra-ui-services/duration'
 
-const fourHoursMs = 14400000
-const oneWeekMs = 604800000
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
@@ -35,16 +34,22 @@ export const config = convict({
     default: 3000,
     env: 'PORT'
   },
+  basePath: {
+    doc: 'Optional mount path for the application when it is hosted behind the hub.',
+    format: String,
+    default: '/sheep/home',
+    env: 'BASE_PATH'
+  },
   staticCacheTimeout: {
     doc: 'Static cache timeout in milliseconds',
     format: Number,
-    default: oneWeekMs,
+    default: milliseconds.oneWeek,
     env: 'STATIC_CACHE_TIMEOUT'
   },
   serviceName: {
     doc: 'Applications Service Name',
     format: String,
-    default: 'cdp-node-frontend-template'
+    default: 'Home for Sheep'
   },
   root: {
     doc: 'Project root',
@@ -52,7 +57,7 @@ export const config = convict({
     default: path.resolve(dirname, '../..')
   },
   assetPath: {
-    doc: 'Asset path',
+    doc: 'Base asset path for direct application access',
     format: String,
     default: '/public',
     env: 'ASSET_PATH'
@@ -87,7 +92,7 @@ export const config = convict({
     },
     format: {
       doc: 'Format to output logs in.',
-      format: ['ecs', 'pino-pretty'],
+      format: ['ecs', 'json', 'pino-pretty'],
       default: isProduction ? 'ecs' : 'pino-pretty',
       env: 'LOG_FORMAT'
     },
@@ -124,13 +129,13 @@ export const config = convict({
       name: {
         doc: 'server side session cache name',
         format: String,
-        default: 'session',
+        default: 'home-sheep-session',
         env: 'SESSION_CACHE_NAME'
       },
       ttl: {
         doc: 'server side session cache ttl',
         format: Number,
-        default: fourHoursMs,
+        default: milliseconds.fourHours,
         env: 'SESSION_CACHE_TTL'
       }
     },
@@ -138,7 +143,7 @@ export const config = convict({
       ttl: {
         doc: 'Session cookie ttl',
         format: Number,
-        default: fourHoursMs,
+        default: milliseconds.fourHours,
         env: 'SESSION_COOKIE_TTL'
       },
       password: {
@@ -179,7 +184,7 @@ export const config = convict({
     keyPrefix: {
       doc: 'Redis cache key prefix name used to isolate the cached results across multiple clients',
       format: String,
-      default: 'cdp-node-frontend-template:',
+      default: 'home-sheep:',
       env: 'REDIS_KEY_PREFIX'
     },
     useSingleInstanceCache: {
@@ -213,6 +218,128 @@ export const config = convict({
       format: String,
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
+    }
+  },
+  sheepHomeApi: {
+    url: {
+      doc: 'Base URL for the sheep-home BE4FE API',
+      format: 'url',
+      default: 'http://localhost:8086',
+      env: 'SHEEP_HOME_API_URL'
+    },
+    apiKey: {
+      doc: 'Optional API key sent to the sheep-home BE4FE API',
+      format: String,
+      default: '',
+      env: 'SHEEP_HOME_API_KEY',
+      sensitive: true
+    },
+    apiKeyHeader: {
+      doc: 'Header name used for the sheep-home BE4FE API key',
+      format: String,
+      default: 'x-api-key',
+      env: 'SHEEP_HOME_API_KEY_HEADER'
+    },
+    timeout: {
+      doc: 'Timeout in milliseconds for sheep-home BE4FE API requests',
+      format: 'nat',
+      default: 5000,
+      env: 'SHEEP_HOME_API_TIMEOUT'
+    }
+  },
+  profileService: {
+    url: {
+      doc: 'Profile service endpoint used to enrich hub auth sessions',
+      format: String,
+      default: 'http://localhost:4000/api/profile',
+      env: 'PROFILE_SERVICE_URL'
+    },
+    apiKey: {
+      doc: 'Optional API key sent to the profile service',
+      format: String,
+      default: '',
+      env: 'PROFILE_SERVICE_API_KEY',
+      sensitive: true
+    },
+    apiKeyHeader: {
+      doc: 'Header name used when sending the profile service API key',
+      format: String,
+      default: 'x-api-key',
+      env: 'PROFILE_SERVICE_API_KEY_HEADER'
+    }
+  },
+  auth: {
+    hubOrigin: {
+      doc: 'Public origin for the coordinating hub',
+      format: String,
+      default: 'https://front-office.lis.defra',
+      env: 'HUB_ORIGIN'
+    },
+    hubJwt: {
+      cookieName: {
+        doc: 'Cookie name that carries the hub-issued JWT',
+        format: String,
+        default: 'livestock_hub_jwt',
+        env: 'HUB_JWT_COOKIE_NAME'
+      },
+      secret: {
+        doc: 'Shared secret used to sign and verify hub-issued JWTs',
+        format: String,
+        default: 'local-dev-hub-jwt-signing-secret-please-change-1234567890',
+        env: 'HUB_JWT_SECRET',
+        sensitive: true
+      },
+      ttlSeconds: {
+        doc: 'Hub-issued JWT time to live in seconds',
+        format: Number,
+        default: 14400,
+        env: 'HUB_JWT_TTL_SECONDS'
+      },
+      issuer: {
+        doc: 'Issuer claim for the hub-issued JWT',
+        format: String,
+        default: 'https://front-office.lis.defra',
+        env: 'HUB_JWT_ISSUER'
+      },
+      audience: {
+        doc: 'Audience claim for the hub-issued JWT',
+        format: String,
+        default: 'livestock-spokes',
+        env: 'HUB_JWT_AUDIENCE'
+      }
+    },
+    oidc: {
+      discoveryUrl: {
+        doc: 'OpenID Connect discovery document used by the hub',
+        format: String,
+        default: '',
+        env: 'OIDC_DISCOVERY_URL'
+      },
+      clientId: {
+        doc: 'OpenID Connect client identifier for the hub',
+        format: String,
+        default: '',
+        env: 'OIDC_CLIENT_ID'
+      },
+      clientSecret: {
+        doc: 'OpenID Connect client secret for the hub',
+        format: String,
+        default: '',
+        env: 'OIDC_CLIENT_SECRET',
+        sensitive: true
+      },
+      serviceId: {
+        doc: 'Defra CI service identifier used during sign in',
+        format: String,
+        default: '',
+        env: 'OIDC_SERVICE_ID'
+      },
+      redirectPath: {
+        doc: 'Callback path used for the authorization code flow',
+        format: String,
+        default: '/auth/callback',
+        env: 'OIDC_REDIRECT_PATH'
+      }
     }
   }
 })

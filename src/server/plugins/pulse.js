@@ -1,14 +1,14 @@
 import hapiPulse from 'hapi-pulse'
+import { getLoggerForConfig } from '@defra/lis-infra-ui-services/logging'
+import { milliseconds } from '@defra/lis-infra-ui-services/duration'
 
-import { createLogger } from '../common/helpers/logging/logger.js'
-
-const tenSeconds = 10 * 1000
+import { config } from '#config/config.js'
 
 const pulse = {
   plugin: hapiPulse,
   options: {
-    logger: createLogger(),
-    timeout: tenSeconds
+    logger: getLoggerForConfig(config),
+    timeout: milliseconds.tenSeconds
   }
 }
 

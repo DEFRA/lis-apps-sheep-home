@@ -1,12 +1,14 @@
 import process from 'node:process'
 
-import { startServer } from '#/server/common/helpers/start-server.js'
-import { createLogger } from '#/server/common/helpers/logging/logger.js'
+import { getLoggerForConfig } from '@defra/lis-infra-ui-services/logging'
+
+import { config } from '#config/config.js'
+import { startServer } from '#server/common/helpers/start-server.js'
 
 await startServer()
 
 process.on('unhandledRejection', (error) => {
-  const logger = createLogger()
+  const logger = getLoggerForConfig(config)
   logger.info('Unhandled rejection')
   logger.error(error)
   process.exitCode = 1
