@@ -31,6 +31,48 @@ function jsonResponse(data, { ok = true, status = 200 } = {}) {
 }
 
 describe('#createSheepHomeApi', () => {
+  test('Requires configuration and a fetch implementation', () => {
+    expect(() => createSheepHomeApi({})).toThrow(
+      'Sheep home API client requires a config object with a get method'
+    )
+    expect(() => createSheepHomeApi({ config, fetchImpl: null })).toThrow(
+      'Sheep home API client requires a fetch implementation'
+    )
+  })
+
+  test('Omits optional request headers when they are not configured', async () => {
+    const configWithoutApiKey = {
+      get(key) {
+        return key === 'sheepHomeApi.apiKey' ? '' : configValues[key]
+      }
+    }
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ data: [] }))
+    const client = createSheepHomeApi({
+      config: configWithoutApiKey,
+      fetchImpl
+    })
+
+    await client.getCphsForUser('test-user')
+
+    expect(fetchImpl.mock.calls[0][1].headers).toEqual({
+      accept: 'application/json'
+    })
+  })
+
+  test('Uses the global fetch implementation by default', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ data: [] }))
+    vi.stubGlobal('fetch', fetchImpl)
+
+    try {
+      const client = createSheepHomeApi({ config })
+      await client.getCphsForUser('test-user')
+
+      expect(fetchImpl).toHaveBeenCalledOnce()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   test('Gets CPHs for an encoded user ID with API and tracing headers', async () => {
     const payload = { source: 'cph-provider', data: [] }
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(payload))

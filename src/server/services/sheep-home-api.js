@@ -29,9 +29,7 @@ export function createSheepHomeApi({ config, fetchImpl = globalThis.fetch }) {
   }
 
   if (typeof fetchImpl !== 'function') {
-    throw new TypeError(
-      'Sheep home API client requires a fetch implementation'
-    )
+    throw new TypeError('Sheep home API client requires a fetch implementation')
   }
 
   const logger = getLoggerForConfig(config)

@@ -18,7 +18,7 @@ const { getAssetPaths } = createBasePathHelpersForConfig(config)
 
 const authGuard = createSpokeGuard({
   spokeId: path.basename(config.get('root')),
-  hubOrigin: config.get('auth.hubOrigin'),
+  hubOrigins: [config.get('auth.hubOrigin')],
   cookieName: config.get('auth.hubJwt.cookieName'),
   cookieOptions: getHubJwtCookieOptions({
     ttlSeconds: config.get('auth.hubJwt.ttlSeconds'),
@@ -28,7 +28,6 @@ const authGuard = createSpokeGuard({
   port: config.get('port'),
   basePath: config.get('basePath'),
   secret: config.get('auth.hubJwt.secret'),
-  issuer: config.get('auth.hubJwt.issuer'),
   audience: config.get('auth.hubJwt.audience'),
   allowHubServiceRoutes: true
 })

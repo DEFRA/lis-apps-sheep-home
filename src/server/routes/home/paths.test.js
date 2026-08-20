@@ -13,6 +13,8 @@ describe('home holding paths', () => {
     ).toBe('10/081/1234')
     expect(cphFromParams()).toBeNull()
     expect(cphFromParams({ county: '10', parish: '081' })).toBeNull()
+    expect(cphFromParams({ county: '10', holding: '1234' })).toBeNull()
+    expect(cphFromParams({ parish: '081', holding: '1234' })).toBeNull()
   })
 
   test('retains slash-separated CPHs in URLs', () => {

@@ -18,7 +18,11 @@ export default defineConfig({
         'stylelint.config.js',
         'vitest.config.js',
         '.sonarlint',
-        'babel.config.cjs'
+        'babel.config.cjs',
+        'src/index.js',
+        'src/client/**',
+        'src/config/**',
+        'src/server/plugins/router.js'
       ]
     }
   }
