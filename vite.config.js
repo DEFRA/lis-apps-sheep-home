@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => {
   return {
     base: resolveViteBase(env.BASE_PATH),
     build: {
+      // GOV.UK Frontend includes a legacy IE media-query hack which is valid
+      // input for browsers but rejected by Lightning CSS's minifier.
+      cssMinify: false,
       outDir: '.public',
       manifest: true,
       rolldownOptions: {
@@ -56,8 +59,7 @@ export default defineConfig(({ mode }) => {
           sourceMapIncludeSources: true,
           style: 'expanded'
         }
-      },
-      lightningcss: { errorRecovery: true }
+      }
     },
     server: {
       hmr: {

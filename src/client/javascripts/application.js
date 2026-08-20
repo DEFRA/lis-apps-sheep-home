@@ -3,8 +3,8 @@ import {
   Button,
   Checkboxes,
   ErrorSummary,
-  Header,
   Radios,
+  ServiceNavigation,
   SkipLink,
   Tabs
 } from 'govuk-frontend'
@@ -12,7 +12,7 @@ import {
 createAll(Button)
 createAll(Checkboxes)
 createAll(ErrorSummary)
-createAll(Header)
 createAll(Radios)
+createAll(ServiceNavigation)
 createAll(SkipLink)
 createAll(Tabs)
