@@ -1,5 +1,5 @@
 {
-  "name": "@defra/app-home-sheep",
+  "name": "@defra/lis-apps-sheep-home",
   "version": "0.1.0",
   "description": "Home for Sheep spoke application for the livestock taxonomy topology.",
   "sideEffects": false,

@@ -72,7 +72,7 @@ jobs:
             ${{ inputs.branch != '' && format('-Dsonar.branch.name={0}', inputs.branch) || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.LIS_SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.OVERRIDE_SONAR_TOKEN || secrets.LIS_SONAR_TOKEN }}
 
       - name: SonarCloud Quality Gate check
         id: quality_gate
@@ -81,5 +81,5 @@ jobs:
         with:
           scanMetadataReportFile: .scannerwork/report-task.txt
         env:
-          SONAR_TOKEN: ${{ secrets.LIS_SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.OVERRIDE_SONAR_TOKEN || secrets.LIS_SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io

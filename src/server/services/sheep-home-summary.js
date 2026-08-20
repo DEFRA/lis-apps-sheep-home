@@ -2,11 +2,7 @@
  * @param {{ sheepHomeApi: object, userId: string, traceId?: string }} options
  * @returns {Promise<{ holdings: object[], totalSheep: number }>}
  */
-export async function buildSheepHomeSummary({
-  sheepHomeApi,
-  userId,
-  traceId
-}) {
+export async function buildSheepHomeSummary({ sheepHomeApi, userId, traceId }) {
   const cphResponse = await sheepHomeApi.getCphsForUser(userId, traceId)
   const holdings = await Promise.all(
     cphResponse.data.map(async (holding) => {

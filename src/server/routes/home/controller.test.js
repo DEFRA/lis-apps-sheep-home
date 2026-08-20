@@ -3,7 +3,11 @@ import { TextEncoder } from 'node:util'
 import { vi } from 'vitest'
 import { SignJWT } from 'jose'
 import { statusCodes } from '@defra/lis-infra-ui-services/status-codes'
-import { createSpokeAuthToken } from '@defra/lis-hubs-infra-access/auth'
+import {
+  AUTHORIZATION_VERSION,
+  createSpokeAuthToken,
+  issueHubJwt
+} from '@defra/lis-hubs-infra-access/auth'
 
 import { config } from '#config/config.js'
 import { createServer } from '#server/server.js'
@@ -17,24 +21,23 @@ vi.mock('#server/services/sheep-home-api.js', () => ({
   createSheepHomeApi: () => ({ getSheepForCph, getCphsForUser })
 }))
 
-const encoder = new TextEncoder()
-
-async function createHubJwt(permissions = ['lis-perm-sheep-read']) {
-  return new SignJWT({
-    email: 'test.user@example.com',
-    firstName: 'Test',
-    lastName: 'User',
-    roles: [],
-    permissions,
-    serviceId: 'test-service'
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject('test-user')
-    .setIssuer(config.get('auth.hubJwt.issuer'))
-    .setAudience(config.get('auth.hubJwt.audience'))
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .sign(encoder.encode(config.get('auth.hubJwt.secret')))
+async function createHubJwt(roles = ['lis-role-sheep-read']) {
+  return issueHubJwt(
+    {
+      sub: 'test-user',
+      email: 'test.user@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      roles,
+      serviceId: 'test-service'
+    },
+    {
+      secret: config.get('auth.hubJwt.secret'),
+      issuer: config.get('auth.hubJwt.issuer'),
+      audience: config.get('auth.hubJwt.audience'),
+      ttlSeconds: config.get('auth.hubJwt.ttlSeconds')
+    }
+  )
 }
 
 async function createHubServiceToken() {
@@ -47,7 +50,7 @@ async function createHubServiceToken() {
         email: 'test.user@example.com',
         firstName: 'Test',
         lastName: 'User',
-        roles: [],
+        roles: ['lis-role-back-office'],
         permissions: ['lis-perm-sheep-read']
       }
     },
@@ -132,6 +135,69 @@ describe('#homeController', () => {
       'trace-123'
     )
     expect(statusCode).toBe(statusCodes.ok)
+  })
+
+  test('Should return not found for a holding not linked to the user', async () => {
+    getCphsForUser.mockResolvedValue({
+      data: [{ name: 'My farm', cph: '10/081/1234' }]
+    })
+    getSheepForCph.mockResolvedValue({ data: [] })
+    const jwt = await createHubJwt()
+
+    const { result, statusCode } = await server.inject({
+      method: 'GET',
+      url: '/12/091/6278',
+      headers: {
+        cookie: `${config.get('auth.hubJwt.cookieName')}=${jwt}`
+      }
+    })
+
+    expect(statusCode).toBe(statusCodes.notFound)
+    expect(result).toBe('Page not found')
+  })
+
+  test('Should render an empty home page when the user has no holdings', async () => {
+    getCphsForUser.mockResolvedValue({ data: [] })
+    const jwt = await createHubJwt()
+
+    const { result, statusCode } = await server.inject({
+      method: 'GET',
+      url: '/',
+      headers: {
+        cookie: `${config.get('auth.hubJwt.cookieName')}=${jwt}`
+      }
+    })
+
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(result).toEqual(
+      expect.stringContaining('No holdings were found for your account.')
+    )
+  })
+
+  test('Should request holdings when optional user identity claims are empty', async () => {
+    getCphsForUser.mockResolvedValue({ data: [] })
+    const jwt = await new SignJWT({
+      roles: ['lis-role-sheep-read'],
+      authzVersion: AUTHORIZATION_VERSION
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('test-user')
+      .setIssuer(config.get('auth.hubJwt.issuer'))
+      .setAudience(config.get('auth.hubJwt.audience'))
+      .setIssuedAt()
+      .setExpirationTime('1h')
+      .sign(new TextEncoder().encode(config.get('auth.hubJwt.secret')))
+
+    const { statusCode } = await server.inject({
+      method: 'GET',
+      url: '/',
+      headers: {
+        cookie: `${config.get('auth.hubJwt.cookieName')}=${jwt}`
+      }
+    })
+
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(getCphsForUser).toHaveBeenCalledWith('test-user', undefined)
   })
 
   test('Should provide a summary fragment to the front-office hub', async () => {
@@ -226,6 +292,40 @@ describe('#homeController', () => {
     })
   })
 
+  test('Should map camel-case and eartag animal identifiers in summary data', async () => {
+    getCphsForUser.mockResolvedValue({
+      data: [{ name: 'My farm', cph: '10/081/1234' }]
+    })
+    getSheepForCph.mockResolvedValue({
+      data: [
+        {
+          sheepId: 'camel-case-id',
+          eartag: 'UK012345600002',
+          dateOfBirth: '2025-03-04',
+          dateRegistered: '2025-03-05'
+        },
+        { eartag: 'UK012345600003' }
+      ]
+    })
+    const bearerToken = await createHubServiceToken()
+
+    const { result, statusCode } = await server.inject({
+      method: 'GET',
+      url: '/summary-data',
+      headers: { authorization: bearerToken }
+    })
+
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(result.holdings[0].animals).toEqual([
+      expect.objectContaining({
+        id: 'camel-case-id',
+        dateOfBirth: '2025-03-04',
+        dateRegistered: '2025-03-05'
+      }),
+      expect.objectContaining({ id: 'UK012345600003' })
+    ])
+  })
+
   test('Should redirect to the hub when the JWT is missing', async () => {
     const { headers, statusCode } = await server.inject({
       method: 'GET',
@@ -239,7 +339,7 @@ describe('#homeController', () => {
   })
 
   test('Should return forbidden when the user lacks the sheep module permission', async () => {
-    const jwt = await createHubJwt(['lis-perm-sheep-move-read'])
+    const jwt = await createHubJwt(['lis-role-sheep-move-read'])
     const { statusCode, result } = await server.inject({
       method: 'GET',
       url: '/',

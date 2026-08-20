@@ -5,9 +5,6 @@ import nunjucks from 'nunjucks'
 import { load } from 'cheerio'
 import { camelCase } from 'lodash'
 
-import * as filters from '#config/nunjucks/filters/filters.js'
-import * as globals from '#config/nunjucks/globals/globals.js'
-
 const JSON_INDENT_SPACES = 2
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -22,14 +19,6 @@ const nunjucksTestEnv = nunjucks.configure(
     lstripBlocks: true
   }
 )
-
-Object.entries(globals).forEach(([name, global]) => {
-  nunjucksTestEnv.addGlobal(name, global)
-})
-
-Object.entries(filters).forEach(([name, filter]) => {
-  nunjucksTestEnv.addFilter(name, filter)
-})
 
 /**
  * @param {string} componentName

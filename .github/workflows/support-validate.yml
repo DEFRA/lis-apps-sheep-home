@@ -87,7 +87,11 @@ jobs:
         env:
           IMAGE: ${{ steps.image.outputs.ref }}
         run: |
-          container=$(docker run --detach --publish 3101:3101 "$IMAGE")
+          container=$(docker run \
+            --detach \
+            --env SESSION_CACHE_ENGINE=memory \
+            --publish 3101:3000 \
+            "$IMAGE")
 
           cleanup() {
             docker logs "$container" || true
