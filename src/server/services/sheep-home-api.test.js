@@ -30,6 +30,33 @@ function jsonResponse(data, { ok = true, status = 200 } = {}) {
   }
 }
 
+describe('#SheepHomeApiError', () => {
+  test('Creates an error without optional metadata', () => {
+    const error = new SheepHomeApiError('Request failed')
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error).toEqual(
+      expect.objectContaining({
+        name: 'SheepHomeApiError',
+        message: 'Request failed',
+        statusCode: undefined
+      })
+    )
+    expect(error.cause).toBeUndefined()
+  })
+
+  test('Preserves the cause and status code', () => {
+    const cause = new SyntaxError('Invalid JSON')
+    const error = new SheepHomeApiError('Invalid response', {
+      cause,
+      statusCode: 502
+    })
+
+    expect(error.cause).toBe(cause)
+    expect(error.statusCode).toBe(502)
+  })
+})
+
 describe('#createSheepHomeApi', () => {
   test('Requires configuration and a fetch implementation', () => {
     expect(() => createSheepHomeApi({})).toThrow(

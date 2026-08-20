@@ -20,7 +20,6 @@ export default defineConfig({
         '.sonarlint',
         'babel.config.cjs',
         'src/index.js',
-        'src/client/**',
         'src/config/**',
         'src/server/plugins/router.js'
       ]
