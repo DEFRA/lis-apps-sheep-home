@@ -1,4 +1,3 @@
-import path from 'node:path'
 import inert from '@hapi/inert'
 import {
   createSpokeGuard,
@@ -17,7 +16,7 @@ import { moduleAccess } from '../../../module-access.js'
 const { getAssetPaths } = createBasePathHelpersForConfig(config)
 
 const authGuard = createSpokeGuard({
-  spokeId: path.basename(config.get('root')),
+  spokeId: 'sheep-home',
   hubOrigins: [config.get('auth.hubOrigin')],
   cookieName: config.get('auth.hubJwt.cookieName'),
   cookieOptions: getHubJwtCookieOptions({
