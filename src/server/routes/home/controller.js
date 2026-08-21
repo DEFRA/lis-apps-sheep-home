@@ -39,7 +39,7 @@ export const homeController = {
       selectedHolding,
       holdingLinks,
       actionLinks,
-      directPort: 3224,
+      directPort: 3500,
       hubPath: buildMicrositePath(taxonomy.id, species.id)
     })
   }

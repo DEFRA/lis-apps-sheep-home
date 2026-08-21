@@ -6,7 +6,7 @@ Role: Standalone spoke microsite.
 
 Dependencies: @defra/lis-infra-ui-services, @defra/lis-species-sheep, @defra/lis-taxonomy-home
 
-Port: `3224`
+Port: `3500`
 
 ## Sheep home API
 
@@ -14,7 +14,7 @@ The application retrieves holding and sheep JSON from the `be4fe/sheep-home`
 service. For local development, start that API on port `8086` and configure:
 
 ```text
-SHEEP_HOME_API_URL=http://localhost:8086
+SHEEP_HOME_API_URL=http://localhost:3525
 ```
 
 `SHEEP_HOME_API_KEY`, `SHEEP_HOME_API_KEY_HEADER` and

@@ -31,7 +31,7 @@ export const config = convict({
   port: {
     doc: 'The port to bind.',
     format: 'port',
-    default: 3000,
+    default: 3500,
     env: 'PORT'
   },
   basePath: {
@@ -224,7 +224,7 @@ export const config = convict({
     url: {
       doc: 'Base URL for the sheep-home BE4FE API',
       format: 'url',
-      default: 'http://localhost:8086',
+      default: 'http://localhost:3525',
       env: 'SHEEP_HOME_API_URL'
     },
     apiKey: {
