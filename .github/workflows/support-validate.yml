@@ -89,6 +89,7 @@ jobs:
         run: |
           container=$(docker run \
             --detach \
+            --env PORT=3000 \
             --env SESSION_CACHE_ENGINE=memory \
             --publish 3101:3000 \
             "$IMAGE")
